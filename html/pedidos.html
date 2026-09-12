@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Pedidos - Adega System</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        @media print {
+            body {
+                background: white;
+            }
+            .app-shell {
+                box-shadow: none;
+                margin: 0;
+                max-width: 100%;
+            }
+            .bottom-nav,
+            .stock-header .back-button,
+            .print-button,
+            .order-list-item {
+                display: none !important;
+            }
+            .app-main {
+                padding: 20px;
+            }
+            .order-detail {
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ccc;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-shell">
+
+        <!-- CABEÇALHO -->
+        <header class="stock-header">
+            <a href="../index.html" class="back-button">←</a>
+            <div class="header-info">
+                <div class="brand-with-logo">
+                    <img src="../img/adega_logo.jpg" alt="Logo ADEGA" class="brand-logo">
+                    <span class="brand">ADEGA PC</span>
+                </div>
+                <h1>Central de Pedidos</h1>
+            </div>
+        </header>
+
+        <!-- CONTEÚDO -->
+        <main class="app-main">
+
+            <!-- LISTA DE PEDIDOS -->
+            <section id="orders-list-section" class="orders-section">
+                <h2 class="orders-title">CENTRAL DE PEDIDOS</h2>
+                <div id="orders-list">
+                    <p class="empty-state">
+                        Nenhum pedido realizado ainda.
+                    </p>
+                </div>
+            </section>
+
+            <!-- DETALHES DO PEDIDO (escondido inicialmente) -->
+            <section id="order-detail-section" class="orders-section" style="display: none;">
+                <a href="pedidos.html" class="back-link">
+                    ← Voltar à lista
+                </a>
+                <div id="order-detail-content"></div>
+            </section>
+
+        </main>
+
+        <!-- MENU INFERIOR -->
+        <nav class="bottom-nav">
+            <a href="../index.html" class="nav-item">
+                🏠
+                <span>Início</span>
+            </a>
+            <a href="pedidos.html" class="nav-item active">
+                📋
+                <span>Pedidos</span>
+            </a>
+            <a href="estoque.html" class="nav-item">
+                📦
+                <span>Estoque</span>
+            </a>
+            <a href="#" class="nav-item">
+                ⚙️
+                <span>Mais</span>
+            </a>
+        </nav>
+
+    </div>
+
+    <script src="../js/utils.js"></script>
+    <script src="../js/data/orderManager.js"></script>
+    <script src="../js/pages/pedidos.js"></script>
+
+</body>
+
+</html>

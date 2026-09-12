@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - Adega System</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <div class="app-shell">
+
+        <!-- CABEÇALHO -->
+        <header class="stock-header">
+
+            <a href="../index.html" class="back-button">
+                ←
+            </a>
+
+            <div class="header-info">
+                <div class="brand-with-logo">
+                    <img src="../img/adega_logo.jpg" alt="Logo ADEGA" class="brand-logo">
+                    <span class="brand">ADEGA PC</span>
+                </div>
+                <h1>Estoque</h1>
+            </div>
+
+        </header>
+
+
+        <!-- CONTEÚDO -->
+        <main class="app-main">
+
+            <!-- TOPO DO ESTOQUE -->
+            <section class="stock-top">
+
+                <div>
+                    <h2>Produtos</h2>
+                    <p>Gerencie os produtos da adega</p>
+                </div>
+
+                <button class="btn primary stock-add-button" id="btn-add-product">
+                    + CRIAR PRODUTO
+                </button>
+
+            </section>
+
+
+            <!-- BUSCA -->
+            <section class="stock-search">
+
+                <input
+                    type="text"
+                    class="search-input"
+                    id="search-input"
+                    placeholder="🔎 Buscar produto..."
+                >
+
+            </section>
+
+
+            <!-- PRODUTOS -->
+            <section class="stock-list" id="stock-list">
+
+                <!-- Produtos serão adicionados dinamicamente aqui pelo JavaScript -->
+
+            </section>
+
+        </main>
+
+
+        <!-- MENU INFERIOR -->
+        <nav class="bottom-nav">
+
+            <a href="../index.html" class="nav-item">
+                🏠
+                <span>Início</span>
+            </a>
+
+            <a href="pedidos.html" class="nav-item">
+                📋
+                <span>Pedidos</span>
+            </a>
+
+            <a href="estoque.html" class="nav-item active">
+                📦
+                <span>Estoque</span>
+            </a>
+
+            <a href="#" class="nav-item">
+                ⚙️
+                <span>Mais</span>
+            </a>
+
+        </nav>
+
+    </div>
+
+
+    <!-- MODAL DE FORMULÁRIO -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Adicionar Produto</h2>
+            </div>
+
+            <form id="product-form">
+                <div class="form-group">
+                    <label for="product-name">Nome do Produto *</label>
+                    <input
+                        type="text"
+                        id="product-name"
+                        name="name"
+                        placeholder="Ex: Heineken 600ml"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="product-category">Categoria *</label>
+                    <select id="product-category" name="category" required>
+                        <option value="">Selecione uma categoria</option>
+                        <option value="Copão">Copão</option>
+                        <option value="Batidas">Batidas</option>
+                        <option value="Baldes">Baldes</option>
+                        <option value="Cervejas">Cervejas</option>
+                        <option value="Bebidas Variadas">Bebidas Variadas</option>
+                        <option value="Drinks Variados">Drinks Variados</option>
+                        <option value="Caipirinha">Caipirinha</option>
+                        <option value="Batata">Batata</option>
+                        <option value="Lanches">Lanches</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-price">Valor (R$) *</label>
+                    <input
+                        type="number"
+                        id="product-price"
+                        name="price"
+                        step="0.01"
+                        min="0"
+                        placeholder="Ex: 12.50"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="product-stock">Quantidade em Estoque *</label>
+                    <input
+                        type="number"
+                        id="product-stock"
+                        name="stock"
+                        min="0"
+                        placeholder="Ex: 24"
+                        required
+                    >
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" id="btn-cancel">CANCELAR</button>
+                    <button type="submit" class="btn-submit">SALVAR PRODUTO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+<br>
+
+    <script src="../js/utils.js"></script>
+    <script src="../js/data/productManager.js"></script>
+    <script src="../js/pages/estoque.js"></script>
+</body>
+</html>
