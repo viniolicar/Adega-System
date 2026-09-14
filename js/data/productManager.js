@@ -63,3 +63,16 @@ function initializeCatalog() {
   if (changed || !localStorage.getItem(ProductManager.storageKey)) ProductManager.saveAll(products);
 }
 initializeCatalog();
+
+// Correção única: nivela o estoque de TODOS os produtos para 15, mesmo os que já tinham
+// um valor definido. Roda só uma vez (marcada pela flag abaixo) para não apagar vendas
+// e ajustes feitos depois dessa correção.
+function resetAllStockToFifteenOnce() {
+  const flagKey = 'adega_stock_reset_15_v1';
+  if (localStorage.getItem(flagKey)) return;
+  const products = ProductManager.getAll();
+  products.forEach(product => { product.stock = 15; });
+  ProductManager.saveAll(products);
+  localStorage.setItem(flagKey, '1');
+}
+resetAllStockToFifteenOnce();
