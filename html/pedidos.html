@@ -5,11 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Central de Pedidos - Adega System</title>
+    <script src="../js/theme.js"></script>
     <link rel="stylesheet" href="../css/style.css">
     <style>
         @media print {
             body {
                 background: white;
+                color: #161616;
             }
             .app-shell {
                 box-shadow: none;
@@ -19,6 +21,7 @@
             .bottom-nav,
             .stock-header .back-button,
             .print-button,
+            .order-detail-actions,
             .order-list-item {
                 display: none !important;
             }
@@ -30,6 +33,17 @@
                 box-shadow: none;
                 border: 1px solid #ccc;
                 padding: 20px;
+                background: white;
+                color: #161616;
+            }
+            .order-detail-table th,
+            .order-detail-table td,
+            .order-detail h2,
+            .order-detail-total-label {
+                color: #161616 !important;
+            }
+            .order-detail-total-value {
+                color: #161616 !important;
             }
         }
     </style>
@@ -88,7 +102,7 @@
                 📦
                 <span>Estoque</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="mais.html" class="nav-item">
                 ⚙️
                 <span>Mais</span>
             </a>
@@ -96,7 +110,78 @@
 
     </div>
 
+    <!-- MODAL DE EDIÇÃO DE PEDIDO -->
+    <div class="modal" id="edit-order-modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Editar Pedido</h2>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-customer-name">Nome do cliente *</label>
+                <input type="text" id="edit-customer-name" placeholder="Ex: João" required>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-product-select">Adicionar produto</label>
+                <select id="edit-product-select">
+                    <option value="">Escolha um produto...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="edit-product-qty">Quantidade</label>
+                <input type="number" id="edit-product-qty" min="1" value="1">
+            </div>
+
+            <button type="button" id="btn-add-to-edit" class="btn primary" style="width: 100%; margin-bottom: 16px;">
+                ADICIONAR AO PEDIDO
+            </button>
+
+            <div id="edit-items-list" style="margin: 20px 0; padding: 16px; background: var(--surface-2); border-radius: 10px; min-height: 50px;"></div>
+
+            <div style="padding: 12px; background: var(--surface-2); border-radius: 10px; margin: 16px 0;">
+                <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 16px;">
+                    <span>Total:</span>
+                    <span id="edit-total">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" id="btn-cancel-edit">CANCELAR</button>
+                <button type="button" class="btn-submit" id="btn-save-edit">SALVAR ALTERAÇÕES</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMAÇÃO DE EXCLUSÃO -->
+    <div class="modal" id="delete-order-modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+                <h2 id="delete-order-title">Excluir pedido?</h2>
+            </div>
+
+            <p style="color: var(--muted); font-size: 14px; margin-top: 0;">O que deseja fazer com os produtos deste pedido?</p>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; margin: 20px 0;">
+                <button type="button" id="btn-delete-restock" class="btn-delete-option btn-delete-option-restock">
+                    ↩ Excluir e devolver ao estoque
+                    <span class="btn-delete-option-desc">Os produtos deste pedido voltam para o estoque disponível.</span>
+                </button>
+                <button type="button" id="btn-delete-keep" class="btn-delete-option btn-delete-option-keep">
+                    🗑 Excluir sem devolver ao estoque
+                    <span class="btn-delete-option-desc">O estoque continua exatamente como está agora.</span>
+                </button>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" id="btn-cancel-delete" style="width: 100%;">CANCELAR</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/utils.js"></script>
+    <script src="../js/data/productManager.js"></script>
     <script src="../js/data/orderManager.js"></script>
     <script src="../js/pages/pedidos.js"></script>
 

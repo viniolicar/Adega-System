@@ -35,7 +35,8 @@ const catalog = [
   ['Caipirinha','Morango',20],['Caipirinha','Limão',20],['Caipirinha','Maracujá',20],['Caipirinha','Morango c/ limão',20],['Caipirinha','Morango c/ abacaxi',20],['Caipirinha','Ballena',35],
   ['Batata','Batata frita grande',25],['Batata','Batata pequena',13],
   ['Lanches','Meia-Noite BBQ',41],['Lanches','Salada Luar',33],['Lanches','Bacon Galáctico',35],['Lanches','Smash Nebuloso',31],['Lanches','Hot Dog Espacial',25],
-  ['Outros','Isqueiro',5],['Outros','Cigarro',15],['Outros','Salgadinho',4]
+  ['Outros','Isqueiro',5],['Outros','Cigarro',15],['Outros','Salgadinho',4],
+  ['Pastel','Pastel (Carne)',10],['Pastel','Pastel (Queijo)',10],['Pastel','Pastel (Carne com Queijo)',10],['Pastel','Pastel (Carne com Cheddar)',10],['Pastel','Pastel (Presunto e Queijo)',10],['Pastel','Pastel (Pizza)',10]
 ];
 
 function initializeCatalog() {
@@ -46,11 +47,17 @@ function initializeCatalog() {
   catalog.forEach(([category, name, price]) => {
     const product = products.find(item => item.name === name && item.category === category);
     if (!product) {
-      products.push({ id: Date.now() + Math.random(), name, category, price, stock: 1 });
+      products.push({ id: Date.now() + Math.random(), name, category, price, stock: 15 });
       changed = true;
-    } else if (product.price !== price) {
-      product.price = price;
-      changed = true;
+    } else {
+      if (product.price !== price) {
+        product.price = price;
+        changed = true;
+      }
+      if (product.stock === undefined || product.stock === null) {
+        product.stock = 15;
+        changed = true;
+      }
     }
   });
   if (changed || !localStorage.getItem(ProductManager.storageKey)) ProductManager.saveAll(products);

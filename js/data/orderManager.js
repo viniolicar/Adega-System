@@ -13,5 +13,19 @@ const OrderManager = {
     order.status = 'Finalizado';
     orders.push(order);
     localStorage.setItem(this.storageKey, JSON.stringify(orders));
+  },
+  getById(id) {
+    return this.getAll().find(order => order.id === id);
+  },
+  update(id, data) {
+    const orders = this.getAll();
+    const index = orders.findIndex(order => order.id === id);
+    if (index === -1) return;
+    orders[index] = { ...orders[index], ...data };
+    localStorage.setItem(this.storageKey, JSON.stringify(orders));
+  },
+  remove(id) {
+    const orders = this.getAll().filter(order => order.id !== id);
+    localStorage.setItem(this.storageKey, JSON.stringify(orders));
   }
 };
