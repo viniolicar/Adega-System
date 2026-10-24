@@ -41,7 +41,7 @@ Copão, Batidas, Baldes, Cervejas, Bebidas Variadas, Drinks Variados, Caipirinha
 | `orders` | Pedidos: código (PED0001...), cliente, funcionário, total e data |
 | `order_items` | Itens de cada pedido, com nome e preço guardados no momento da venda |
 
-> Os scripts SQL usados para criar essas tabelas, as regras de segurança e as funções ainda não estão versionados neste repositório. Para recriar o banco do zero é preciso reescrevê-los.
+> Os scripts SQL que criam as tabelas, as regras de segurança, o cardápio e as funções estão na pasta [`database/`](database/), com o passo a passo para recriar o banco do zero.
 
 ## Estrutura do projeto
 
@@ -57,6 +57,7 @@ adega-system/
 │   └── mais.html            # Perfil, tema e estoque baixo
 ├── css/
 │   └── style.css
+├── database/               # Scripts SQL do banco (Supabase) e passo a passo
 ├── js/
 │   ├── supabaseClient.js     # Conexão com o Supabase
 │   ├── authGuard.js          # Bloqueia páginas para quem não está logado
