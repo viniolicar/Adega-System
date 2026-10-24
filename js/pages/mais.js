@@ -1,8 +1,15 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   const lowStockList = document.getElementById('low-stock-list');
 
-  function renderLowStock() {
-    const products = ProductManager.getAll().filter(product => (Number(product.stock) || 0) <= 10);
+  async function renderProfile() {
+    const profile = await getCurrentProfile();
+    if (!profile) return;
+    document.getElementById('profile-name').textContent = profile.nome;
+    document.getElementById('profile-role').textContent = profile.role === 'administrador' ? 'Administrador' : 'Funcionário';
+  }
+
+  async function renderLowStock() {
+    const products = (await ProductManager.getAll()).filter(product => (Number(product.stock) || 0) <= 10);
 
     if (!products.length) {
       lowStockList.innerHTML = '<p class="empty-state">✓ Nenhum produto com estoque baixo</p>';
@@ -18,12 +25,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }).join('');
   }
 
-  renderLowStock();
+  await renderProfile();
+  await renderLowStock();
   window.addEventListener('pageshow', renderLowStock);
 
-  // Não há sistema de login ainda (previsto para quando o backend for implementado);
-  // por enquanto o botão só retorna à tela inicial.
   document.getElementById('btn-logout').addEventListener('click', () => {
-    window.location.href = '../index.html';
+    logoutAndRedirect();
   });
 });

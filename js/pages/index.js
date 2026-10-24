@@ -1,14 +1,28 @@
-function renderDailySummary() {
+let currentProfile = null;
+
+async function renderGreeting() {
+  const el = document.querySelector('.greeting');
+  if (!el || !currentProfile) return;
+  el.textContent = `Olá, ${currentProfile.nome} 👋`;
+}
+
+async function renderDailySummary() {
   const ordersCountEl = document.getElementById('summary-orders-count');
   if (!ordersCountEl) return;
   const today = new Date().toLocaleDateString('pt-BR');
-  const todayOrders = OrderManager.getAll().filter(order => order.date === today);
-  const lowStockCount = ProductManager.getAll().filter(product => (Number(product.stock) || 0) <= 10).length;
+  const [orders, products] = await Promise.all([OrderManager.getAll(), ProductManager.getAll()]);
+  const todayOrders = orders.filter(order => order.date === today);
+  const lowStockCount = products.filter(product => (Number(product.stock) || 0) <= 10).length;
   ordersCountEl.textContent = todayOrders.length;
   document.getElementById('summary-total').textContent = `R$ ${formatPrice(todayOrders.reduce((sum, order) => sum + order.total, 0))}`;
   document.getElementById('summary-low-stock').textContent = lowStockCount;
 }
-renderDailySummary();
+
+document.addEventListener('DOMContentLoaded', async () => {
+  currentProfile = await getCurrentProfile();
+  await renderGreeting();
+  await renderDailySummary();
+});
 window.addEventListener('pageshow', renderDailySummary);
 
 if (document.getElementById('order-modal')) {
@@ -21,6 +35,7 @@ if (document.getElementById('order-modal')) {
   const totalArea = document.getElementById('order-total-area');
   const total = document.getElementById('order-total');
   const finish = document.getElementById('btn-finalize-order');
+
   const render = () => {
     if (!items.length) {
       list.innerHTML = '<p style="text-align:center;color:var(--muted);font-size:13px">Nenhum item adicionado ainda</p>';
@@ -34,11 +49,28 @@ if (document.getElementById('order-modal')) {
     totalArea.style.display = 'block';
     finish.style.display = 'block';
   };
-  const populate = () => { select.innerHTML = '<option value="">Escolha um produto...</option>' + ProductManager.getAll().map(product => { const stock = Math.max(0, Number(product.stock) || 0); return `<option value="${product.id}" data-stock="${stock}" ${stock === 0 ? 'disabled' : ''}>${escapeHtml(product.name)} - R$ ${formatPrice(product.price)} ${stock === 0 ? '(Esgotado)' : `(${stock} em estoque)`}</option>`; }).join(''); };
-  document.getElementById('new-order').addEventListener('click', () => { items = []; customerName.value = ''; quantity.value = '1'; populate(); render(); modal.classList.add('active'); });
+
+  const populate = async () => {
+    const products = await ProductManager.getAll();
+    select.innerHTML = '<option value="">Escolha um produto...</option>' + products.map(product => {
+      const stock = Math.max(0, Number(product.stock) || 0);
+      return `<option value="${product.id}" ${stock === 0 ? 'disabled' : ''}>${escapeHtml(product.name)} - R$ ${formatPrice(product.price)} ${stock === 0 ? '(Esgotado)' : `(${stock} em estoque)`}</option>`;
+    }).join('');
+  };
+
+  document.getElementById('new-order').addEventListener('click', async () => {
+    items = [];
+    customerName.value = '';
+    quantity.value = '1';
+    await populate();
+    render();
+    modal.classList.add('active');
+  });
+
   document.getElementById('btn-cancel-order').addEventListener('click', () => modal.classList.remove('active'));
-  document.getElementById('btn-add-to-order').addEventListener('click', () => {
-    const product = ProductManager.getById(Number(select.value));
+
+  document.getElementById('btn-add-to-order').addEventListener('click', async () => {
+    const product = await ProductManager.getById(select.value);
     const amount = parseInt(quantity.value, 10);
     if (!product) return alert('Selecione um produto.');
     const existing = items.find(item => item.productId === product.id);
@@ -49,17 +81,31 @@ if (document.getElementById('order-modal')) {
     quantity.value = '1';
     render();
   });
-  finish.addEventListener('click', () => {
+
+  finish.addEventListener('click', async () => {
     const name = customerName.value.trim();
     if (!name) return alert('Informe o nome do cliente.');
-    const products = ProductManager.getAll();
     if (!items.length) return alert('Adicione pelo menos um item ao pedido.');
-    if (items.some(item => { const product = products.find(candidate => candidate.id === item.productId); return !product || item.quantity > product.stock; })) return alert('O estoque mudou. Revise os itens do pedido.');
-    items.forEach(item => { const product = ProductManager.getById(item.productId); ProductManager.update(item.productId, { stock: Math.max(0, product.stock - item.quantity) }); });
-    OrderManager.add({ customerName: name, items: items.map(item => ({ ...item, subtotal: item.price * item.quantity })), total: items.reduce((sum, item) => sum + item.price * item.quantity, 0) });
-    items = [];
-    modal.classList.remove('active');
-    renderDailySummary();
-    alert('Pedido finalizado com sucesso!');
+
+    finish.disabled = true;
+    finish.textContent = 'SALVANDO...';
+    try {
+      await OrderManager.create(name, currentProfile.id, items.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        category: item.category,
+        price: item.price,
+        quantity: item.quantity
+      })));
+      items = [];
+      modal.classList.remove('active');
+      await renderDailySummary();
+      alert('Pedido finalizado com sucesso!');
+    } catch (error) {
+      alert(error.message || 'Não foi possível registrar o pedido. Verifique sua conexão e tente novamente.');
+    } finally {
+      finish.disabled = false;
+      finish.textContent = 'FINALIZAR PEDIDO';
+    }
   });
 }

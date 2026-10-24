@@ -1,12 +1,12 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   const ordersList = document.getElementById('orders-list');
   const orderDetailSection = document.getElementById('order-detail-section');
   const orderListSection = document.getElementById('orders-list-section');
 
   let currentDetailOrderId = null;
 
-  function renderOrdersList() {
-    const orders = OrderManager.getAll();
+  async function renderOrdersList() {
+    const orders = await OrderManager.getAll();
 
     if (orders.length === 0) {
       ordersList.innerHTML = '<p class="empty-state">Nenhum pedido realizado ainda.</p>';
@@ -50,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }));
   }
 
-  function showOrderDetail(orderId) {
-    const order = OrderManager.getById(orderId);
+  async function showOrderDetail(orderId) {
+    const order = await OrderManager.getById(orderId);
 
     if (!order) return;
 
@@ -126,18 +126,23 @@ document.addEventListener('DOMContentLoaded', function() {
   const editQty = document.getElementById('edit-product-qty');
   const editItemsList = document.getElementById('edit-items-list');
   const editTotal = document.getElementById('edit-total');
+  const btnSaveEdit = document.getElementById('btn-save-edit');
 
   let editItems = [];
   let editOriginalQtyMap = {};
   let editingOrderId = null;
 
+  // Estoque "disponível" pra fins de edição: o estoque atual do produto
+  // + o que este mesmo pedido já tinha reservado antes de começar a edição
+  // (senão o campo mostraria um número menor do que realmente é possível usar).
   function trueAvailable(product) {
     const key = String(product.id);
     return (Number(product.stock) || 0) + (editOriginalQtyMap[key] || 0);
   }
 
-  function populateEditSelect() {
-    editSelect.innerHTML = '<option value="">Escolha um produto...</option>' + ProductManager.getAll().map(product => {
+  async function populateEditSelect() {
+    const products = await ProductManager.getAll();
+    editSelect.innerHTML = '<option value="">Escolha um produto...</option>' + products.map(product => {
       const avail = Math.max(0, trueAvailable(product));
       return `<option value="${product.id}" ${avail === 0 ? 'disabled' : ''}>${escapeHtml(product.name)} - R$ ${formatPrice(product.price)} ${avail === 0 ? '(Esgotado)' : `(${avail} disponível)`}</option>`;
     }).join('');
@@ -154,8 +159,8 @@ document.addEventListener('DOMContentLoaded', function() {
     editTotal.textContent = `R$ ${formatPrice(editItems.reduce((sum, item) => sum + item.price * item.quantity, 0))}`;
   }
 
-  function openEditModal(orderId) {
-    const order = OrderManager.getById(orderId);
+  async function openEditModal(orderId) {
+    const order = await OrderManager.getById(orderId);
     if (!order) return;
 
     editingOrderId = orderId;
@@ -168,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     editCustomerName.value = order.customerName || '';
     editQty.value = '1';
-    populateEditSelect();
+    await populateEditSelect();
     renderEditItems();
     editModal.classList.add('active');
   }
@@ -178,8 +183,8 @@ document.addEventListener('DOMContentLoaded', function() {
     editingOrderId = null;
   });
 
-  document.getElementById('btn-add-to-edit').addEventListener('click', () => {
-    const product = ProductManager.getById(Number(editSelect.value));
+  document.getElementById('btn-add-to-edit').addEventListener('click', async () => {
+    const product = await ProductManager.getById(editSelect.value);
     const amount = parseInt(editQty.value, 10);
     if (!product) return alert('Selecione um produto.');
     if (!Number.isInteger(amount) || amount < 1) return alert('Informe uma quantidade válida.');
@@ -193,50 +198,35 @@ document.addEventListener('DOMContentLoaded', function() {
     renderEditItems();
   });
 
-  document.getElementById('btn-save-edit').addEventListener('click', () => {
+  btnSaveEdit.addEventListener('click', async () => {
     const name = editCustomerName.value.trim();
     if (!name) return alert('Informe o nome do cliente.');
     if (!editItems.length) return alert('O pedido precisa ter pelo menos um item.');
 
-    const products = ProductManager.getAll();
-    const newQtyMap = {};
-    editItems.forEach(item => {
-      const key = String(item.productId);
-      newQtyMap[key] = (newQtyMap[key] || 0) + item.quantity;
-    });
+    btnSaveEdit.disabled = true;
+    btnSaveEdit.textContent = 'SALVANDO...';
+    try {
+      await OrderManager.updateItems(editingOrderId, name, editItems.map(item => ({
+        productId: item.productId,
+        name: item.name,
+        category: item.category,
+        price: item.price,
+        quantity: item.quantity
+      })));
 
-    const allKeys = new Set([...Object.keys(editOriginalQtyMap), ...Object.keys(newQtyMap)]);
-    const deltas = [];
-
-    for (const key of allKeys) {
-      const originalQty = editOriginalQtyMap[key] || 0;
-      const newQty = newQtyMap[key] || 0;
-      const delta = newQty - originalQty;
-      if (delta === 0) continue;
-      const product = products.find(candidate => String(candidate.id) === key);
-      if (!product) return alert('Um dos produtos do pedido não existe mais.');
-      if (delta > 0 && product.stock < delta) return alert(`Estoque insuficiente para ${product.name}. Disponível: ${product.stock}.`);
-      deltas.push({ productId: product.id, delta });
+      editModal.classList.remove('active');
+      await renderOrdersList();
+      if (orderDetailSection.style.display === 'block' && currentDetailOrderId === editingOrderId) {
+        await showOrderDetail(editingOrderId);
+      }
+      editingOrderId = null;
+      alert('Pedido atualizado com sucesso!');
+    } catch (error) {
+      alert(error.message || 'Não foi possível salvar as alterações. Verifique sua conexão e tente novamente.');
+    } finally {
+      btnSaveEdit.disabled = false;
+      btnSaveEdit.textContent = 'SALVAR ALTERAÇÕES';
     }
-
-    deltas.forEach(({ productId, delta }) => {
-      const product = ProductManager.getById(productId);
-      ProductManager.update(productId, { stock: Math.max(0, product.stock - delta) });
-    });
-
-    OrderManager.update(editingOrderId, {
-      customerName: name,
-      items: editItems.map(item => ({ ...item, subtotal: item.price * item.quantity })),
-      total: editItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-    });
-
-    editModal.classList.remove('active');
-    renderOrdersList();
-    if (orderDetailSection.style.display === 'block' && currentDetailOrderId === editingOrderId) {
-      showOrderDetail(editingOrderId);
-    }
-    editingOrderId = null;
-    alert('Pedido atualizado com sucesso!');
   });
 
   // ---------- EXCLUSÃO DE PEDIDO ----------
@@ -251,12 +241,18 @@ document.addEventListener('DOMContentLoaded', function() {
     deleteModal.classList.add('active');
   }
 
-  function finishDelete() {
-    deleteModal.classList.remove('active');
-    orderPendingDelete = null;
-    renderOrdersList();
-    orderDetailSection.style.display = 'none';
-    orderListSection.style.display = 'block';
+  async function finishDelete(restock) {
+    if (!orderPendingDelete) return;
+    try {
+      await OrderManager.remove(orderPendingDelete, restock);
+      deleteModal.classList.remove('active');
+      orderPendingDelete = null;
+      await renderOrdersList();
+      orderDetailSection.style.display = 'none';
+      orderListSection.style.display = 'block';
+    } catch (error) {
+      alert('Não foi possível excluir o pedido. Verifique sua conexão e tente novamente.');
+    }
   }
 
   document.getElementById('btn-cancel-delete').addEventListener('click', () => {
@@ -264,26 +260,10 @@ document.addEventListener('DOMContentLoaded', function() {
     orderPendingDelete = null;
   });
 
-  document.getElementById('btn-delete-restock').addEventListener('click', () => {
-    if (!orderPendingDelete) return;
-    const order = OrderManager.getById(orderPendingDelete);
-    if (order) {
-      order.items.forEach(item => {
-        const product = ProductManager.getById(item.productId);
-        if (product) ProductManager.update(item.productId, { stock: product.stock + item.quantity });
-      });
-    }
-    OrderManager.remove(orderPendingDelete);
-    finishDelete();
-  });
+  document.getElementById('btn-delete-restock').addEventListener('click', () => finishDelete(true));
+  document.getElementById('btn-delete-keep').addEventListener('click', () => finishDelete(false));
 
-  document.getElementById('btn-delete-keep').addEventListener('click', () => {
-    if (!orderPendingDelete) return;
-    OrderManager.remove(orderPendingDelete);
-    finishDelete();
-  });
-
-  renderOrdersList();
+  await renderOrdersList();
 
   window.addEventListener('pageshow', renderOrdersList);
 });
