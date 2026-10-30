@@ -9,6 +9,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('login-form');
   const errorEl = document.getElementById('login-error');
   const submitBtn = document.getElementById('btn-login');
+  const passwordInput = document.getElementById('login-password');
+  const togglePasswordBtn = document.getElementById('btn-toggle-password');
+
+  togglePasswordBtn.addEventListener('click', () => {
+    const show = passwordInput.type === 'password';
+    passwordInput.type = show ? 'text' : 'password';
+    togglePasswordBtn.classList.toggle('is-visible', show);
+    togglePasswordBtn.setAttribute('aria-label', show ? 'Esconder senha' : 'Mostrar senha');
+  });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
